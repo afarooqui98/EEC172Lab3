@@ -48,6 +48,7 @@ extern void (* const g_pfnVectors[])(void);
 volatile unsigned long bitBufferPos;
 
 volatile int timerCount;
+volatile int stillWaiting;
 
 static unsigned int buffer_Length = 10;
 volatile int buffer_Position;
@@ -139,31 +140,32 @@ void TimerHandler(){
     timerCount++; //counts up periodically, simulates time interval
 }
 
-//void UARTIntHandler(){
-//    MAP_UARTIntDisable(UARTA1_BASE, UART_INT_RX);
-//    char recvChar;
-//    Message("UART INT\n");
-//    //clear_Incoming();
-//    memset(recvBuffer, 0, sizeof(recvBuffer));
-//    recv_buffer_Position = 0;
-//    while(UARTCharsAvail(PAIRDEV)){
-//        recvChar = UARTCharGet(PAIRDEV);
-//        recvBuffer[recv_buffer_Position] = recvChar;
-//        ++recv_buffer_Position;
-//        Report("UART Received Letter: %c\n", recvChar);
-//    }
-//    int i;
-//    for(i = 0; i < recv_buffer_Position; i++){
-//        //output_Display(recvBuffer[i], i);
-//    }
-//    MAP_UARTIntEnable(UARTA1_BASE, UART_INT_RX);
-//}
+void UARTIntHandler(){
+    MAP_UARTIntDisable(UARTA1_BASE, UART_INT_RX);
+    char recvChar;
+    Message("UART INT\n");
+    clear_Incoming();
+    memset(recvBuffer, 0, sizeof(recvBuffer));
+    recv_buffer_Position = 0;
+    while(UARTCharsAvail(PAIRDEV)){
+        recvChar = UARTCharGet(PAIRDEV);
+        recvBuffer[recv_buffer_Position] = recvChar;
+        ++recv_buffer_Position;
+        Report("UART Received Letter: %c\n", recvChar);
+    }
+    int i;
+    for(i = 0; i < recv_buffer_Position; i++){
+        output_Display(recvBuffer[i], i);
+    }
+    MAP_UARTIntEnable(UARTA1_BASE, UART_INT_RX);
+}
 
 //consecutive button presses
 void TimerIntHandler(){
     Timer_IF_InterruptClear(TIMERA1_BASE);
     numPresses = 0;
-    button = 12; //unknown button
+    stillWaiting = 0;
+    //button = 12; //unknown button
 }
 
 ////Helpers
@@ -229,6 +231,48 @@ static void reinitArray(void){
     int i;
     for (i = 0; i < 75; i++){
         arr[i] = '0';
+    }
+}
+
+static void write_to_screen(void){
+    char toWrite = "";
+    int j;
+    switch(button){
+    case ENTER:
+        for (j = 0; j < buffer_Position; ++j){
+            MAP_UARTCharPut(PAIRDEV, buffer[j]);
+        }
+        empty_Buffer();
+        break;
+    case DEL:
+        char_Delete();
+        break;
+    case UNKNWN:
+        //if invalid input found, want to reset
+        Timer_IF_Stop(TIMERA1_BASE, TIMER_A);
+        numPresses = 0;
+        Report("unknown character pressed");
+        break;
+    default:
+        if(button == prevButton && stillWaiting == 1){
+            //delete the char, then write the next one in the same button range ONLY if buttonpresses hasnt been reset
+            toWrite = findText();
+            numPresses++;
+            char_Delete();
+            Timer_IF_Start(TIMERA1_BASE, TIMER_A, 1000); //want to start the timer after displaying first char
+
+            toWrite = findText();
+            if(fill_Buffer(toWrite) == true){break;}
+            input_Display(buffer[buffer_Position-1], buffer_Position); //display next in the button range on OLED
+            stillWaiting = 1;
+            Report("numpresses is %d\r\n", stillWaiting);
+        }else{
+            Timer_IF_Stop(TIMERA1_BASE, TIMER_A); //if the data is different, no need to wait for button presses
+            numPresses = 0; //reset button presses
+            toWrite = findText();
+            if(fill_Buffer(toWrite) == true){break;}
+            input_Display(buffer[buffer_Position-1], buffer_Position);
+        }
     }
 }
 
@@ -301,44 +345,8 @@ static void decode_and_write(void){
     }
 
     reinitArray();
-    char toWrite = "";
     MAP_UtilsDelay(800000);
-
-    switch(button){
-    case ENTER:
-        //TODO: send message
-        empty_Buffer();
-        break;
-    case DEL:
-        char_Delete();
-        break;
-    case UNKNWN:
-        //if invalid input found, want to reset
-        Timer_IF_Stop(TIMERA1_BASE, TIMER_A);
-        numPresses = 0;
-        Report("unknown character pressed");
-        break;
-    default:
-        if(button == prevButton){
-            //delete the char, then write the next one in the same button range ONLY if buttonpresses hasnt been reset
-            toWrite = findText();
-            if(numPresses > 0){char_Delete();}
-            toWrite = findText();
-            if(fill_Buffer(toWrite) == true){break;}
-
-            input_Display(buffer[buffer_Position-1], buffer_Position); //display next in the button range on OLED
-            numPresses++;
-            Timer_IF_Start(TIMERA1_BASE, TIMER_A, 1000); //want to start the timer after displaying first char
-        }else{
-            Timer_IF_Stop(TIMERA1_BASE, TIMER_A); //if the data is different, no need to wait for button presses
-            numPresses = 0; //reset button presses
-            toWrite = findText();
-            if(fill_Buffer(toWrite) == true){break;}
-            input_Display(buffer[buffer_Position-1], buffer_Position);
-            prevButton = button;
-        }
-    }
-
+    write_to_screen();
     prevButton = button;
 }
 
@@ -387,12 +395,12 @@ static void initOLED(void){
 
 static void initComms(void){
     //UART1 handler setup
-    /*MAP_UARTIntRegister(UARTA1_BASE,UARTIntHandler);
+    MAP_UARTIntRegister(UARTA1_BASE,UARTIntHandler);
     MAP_UARTIntEnable(UARTA1_BASE,UART_INT_RX);
     MAP_UARTFIFOLevelSet(UARTA1_BASE,UART_FIFO_TX1_8,UART_FIFO_RX1_8);
     MAP_UARTConfigSetExpClk(PAIRDEV,MAP_PRCMPeripheralClockGet(PAIRDEV_PERIPH),
                              UART_BAUD_RATE, (UART_CONFIG_WLEN_8 | UART_CONFIG_STOP_ONE |
-                              UART_CONFIG_PAR_NONE));*/
+                              UART_CONFIG_PAR_NONE));
 
     MAP_PRCMPeripheralReset(PRCM_GSPI);
 
