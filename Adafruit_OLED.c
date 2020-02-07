@@ -18,7 +18,7 @@
 
 // Common interface includes
 #include "uart_if.h"
-#include "pinmux.h"
+#include "pin_mux_config.h"
 
 #include "Adafruit_SSD1351.h"
 
@@ -33,13 +33,13 @@ void writeCommand(unsigned char c) {
 */
     unsigned long ulDummy;
     SPICSEnable(GSPI_BASE);
-    GPIOPinWrite(GPIOA3_BASE, 0x1, 0); //set CS pin to LOW
-    GPIOPinWrite(GPIOA2_BASE, 0x40, 0); //set DC pin to LOW for command
+    GPIOPinWrite(GPIOA1_BASE, 0x1, 0); //set CS pin to LOW
+    GPIOPinWrite(GPIOA1_BASE, 0x2, 0); //set DC pin to LOW for command
 
     SPIDataPut(GSPI_BASE, c);   //send over SPI
     SPIDataGet(GSPI_BASE,&ulDummy);
 
-    GPIOPinWrite(GPIOA3_BASE, 0x1, 0x1); //set CS pin to HIGH
+    GPIOPinWrite(GPIOA1_BASE, 0x1, 0x1); //set CS pin to HIGH
     SPICSDisable(GSPI_BASE);
 
 }
@@ -54,13 +54,13 @@ void writeData(unsigned char c) {
     unsigned long ulDummy;
     SPICSEnable(GSPI_BASE);
 
-    GPIOPinWrite(GPIOA3_BASE, 0x1, 0); //set CS pin to LOW
-    GPIOPinWrite(GPIOA2_BASE, 0x40, 0x40); //set DC pin to high for data
+    GPIOPinWrite(GPIOA1_BASE, 0x1, 0); //set CS pin to LOW
+    GPIOPinWrite(GPIOA1_BASE, 0x2, 0x2); //set DC pin to high for data
 
     SPIDataPut(GSPI_BASE, c);   //send over SPI
     SPIDataGet(GSPI_BASE,&ulDummy);
 
-    GPIOPinWrite(GPIOA3_BASE, 0x1, 0x1); //set CS pin to HIGH
+    GPIOPinWrite(GPIOA1_BASE, 0x1, 0x1); //set CS pin to HIGH
     SPICSDisable(GSPI_BASE);
 
 }
@@ -78,11 +78,11 @@ void Adafruit_Init(void){
 
   volatile unsigned long delay;
 
-  GPIOPinWrite(GPIOA2_BASE, 0x80, 0);	// RESET = RESET_LOW
+  GPIOPinWrite(GPIOA0_BASE, 0x80, 0);	// RESET = RESET_LOW
 
   for(delay=0; delay<100; delay=delay+1);// delay minimum 100 ns
 
-  GPIOPinWrite(GPIOA2_BASE, 0x80, 0x80);	// RESET = RESET_HIGH
+  GPIOPinWrite(GPIOA0_BASE, 0x80, 0x80);	// RESET = RESET_HIGH
 
 	// Initialization Sequence
   writeCommand(SSD1351_CMD_COMMANDLOCK);  // set command lock

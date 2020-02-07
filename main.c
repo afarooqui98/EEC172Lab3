@@ -24,7 +24,7 @@
 #include "uart.h"
 #include "timer_if.h"
 #include "timer.h"
-#include "pinmux.h"
+#include "pin_mux_config.h"
 
 // Display includes
 #include "Adafruit_GFX.h"
@@ -45,13 +45,12 @@
 //*****************************************************************************
 extern void (* const g_pfnVectors[])(void);
 
-volatile unsigned long bufferPos;
-volatile unsigned char intHandlerFlag;
+volatile unsigned long bitBufferPos;
 
 volatile int timerCount;
 
 static unsigned int buffer_Length = 10;
-volatile unsigned int buffer_Position;
+volatile int buffer_Position;
 volatile unsigned int recv_buffer_Position;
 
 char *buffer;
@@ -111,88 +110,63 @@ void char_Delete(void);
 int compareStrings(char* first, char* second);
 char findText(void);
 
-/// Handlers
+//// Handlers
+
+//button press handler
 static void GPIOA0IntHandler(void) {    // SW2 handler
     unsigned long ulStatus;
 
     ulStatus = MAP_GPIOIntStatus(GPIOA0_BASE, true);
     MAP_GPIOIntClear(GPIOA0_BASE, ulStatus);
 
-    if(bufferPos == 0){MAP_TimerEnable(TIMERA0_BASE, TIMER_A);}
+    if(bitBufferPos == 0){MAP_TimerEnable(TIMERA0_BASE, TIMER_A);}
     //Report("interval is %d, count is %d\r\n", timerCount, bufferPos);
 
     if(timerCount > 37){
-        arr[bufferPos] = '1';
+        arr[bitBufferPos] = '1';
         timerCount = 0; //reset counter
     }else{
-        arr[bufferPos] = '0';
+        arr[bitBufferPos] = '0';
         timerCount = 0; //once written, reset counter
     }
 
-    intHandlerFlag = 1;
-    bufferPos++;
+    bitBufferPos++;
 }
 
+//IR decoding
 void TimerHandler(){
     Timer_IF_InterruptClear(TIMERA0_BASE);
     timerCount++; //counts up periodically, simulates time interval
 }
 
-void UARTIntHandler(){
-    MAP_UARTIntDisable(UARTA1_BASE, UART_INT_RX);
-    char recvChar;
-    Message("UART INT\n");
-    //clear_Incoming();
-    memset(recvBuffer, 0, sizeof(recvBuffer));
-    recv_buffer_Position = 0;
-    while(UARTCharsAvail(PAIRDEV)){
-        recvChar = UARTCharGet(PAIRDEV);
-        recvBuffer[recv_buffer_Position] = recvChar;
-        ++recv_buffer_Position;
-        Report("UART Received Letter: %c\n", recvChar);
-    }
-    int i;
-    for(i = 0; i < recv_buffer_Position; i++){
-        //output_Display(recvBuffer[i], i);
-    }
-    MAP_UARTIntEnable(UARTA1_BASE, UART_INT_RX);
-}
+//void UARTIntHandler(){
+//    MAP_UARTIntDisable(UARTA1_BASE, UART_INT_RX);
+//    char recvChar;
+//    Message("UART INT\n");
+//    //clear_Incoming();
+//    memset(recvBuffer, 0, sizeof(recvBuffer));
+//    recv_buffer_Position = 0;
+//    while(UARTCharsAvail(PAIRDEV)){
+//        recvChar = UARTCharGet(PAIRDEV);
+//        recvBuffer[recv_buffer_Position] = recvChar;
+//        ++recv_buffer_Position;
+//        Report("UART Received Letter: %c\n", recvChar);
+//    }
+//    int i;
+//    for(i = 0; i < recv_buffer_Position; i++){
+//        //output_Display(recvBuffer[i], i);
+//    }
+//    MAP_UARTIntEnable(UARTA1_BASE, UART_INT_RX);
+//}
 
-//  find letter corresponding to the
-// button that was pressed and fill the outgoing buffer
+//consecutive button presses
 void TimerIntHandler(){
     Timer_IF_InterruptClear(TIMERA1_BASE);
-    char inChar = findText();
-    bool full = fill_Buffer(inChar);
-    if(full){
-        Message("error: full buffer.\r\n");
-    } else {
-        //input_Display( buffer[buffer_Position-1], buffer_Position );
-        if (inChar == '\n'){ //enter pressed
-            Message("BUFFER PRINTING OVER UART\r\n");
-            int j;
-            for (j = 0; j < buffer_Position; ++j){
-                MAP_UARTCharPut(PAIRDEV, buffer[j]);
-            }
-            empty_Buffer();
-        }
-
-        if (inChar == 'd'){ //delete pressed
-            Message("Deleting last buffer entry\r\n");
-            char_Delete();
-        }
-    }
-
-    int i;
-    for(i = 0; i < buffer_Position; ++i){
-        Report("Buffer: %c\r\n", buffer[i]);
-    }
-
-    Timer_IF_Stop(TIMERA1_BASE, TIMER_A);
-    prevButton = UNKNWN;
+    numPresses = 0;
+    button = 12; //unknown button
 }
 
-///Helpers
+////Helpers
 int compareStrings(char* first, char* second){
     if (strstr(first, second) != NULL){
             return 1;
@@ -203,23 +177,23 @@ int compareStrings(char* first, char* second){
 void empty_Buffer(void){
     memset( buffer, 0, sizeof(buffer));
     buffer_Position = 0;
-    //clear_Outgoing();
-    //ENTER = 0;
+    clear_Outgoing();
 }
 
 void char_Delete(void){
     if(buffer_Position == -1){return;}
     buffer[buffer_Position] = '\0';
-    //erase_InChar(buffer_Position);
+    erase_InChar(buffer_Position);
     --buffer_Position;
-    //DEL = 0;
 }
 
 //MAIN LOGIC
+
+//find text by button
 char findText(void){
     char letter[1] = "x";
     if(button != 1 && button != ENTER && button != DEL){
-        letter[0] = numPad[prevButton][numPresses];
+        letter[0] = numPad[button][numPresses % 4]; //modulo by 4 to cycle through the characters
     }else{
         if(prevButton == ENTER){letter[0] = '\n';}
         if(prevButton == DEL){letter[0] = 'd';}
@@ -228,6 +202,7 @@ char findText(void){
     return letter[0];
 }
 
+//add character to string that will be sent out
 bool fill_Buffer(char letter_INPUT){
     if (letter_INPUT == 'd'){  //ignore if full if delete is pressed
         return false;
@@ -236,7 +211,7 @@ bool fill_Buffer(char letter_INPUT){
     }else{
         if (buffer_Position < buffer_Length){ //buffer not full
             if(letter_INPUT == 'x'){
-                return false;
+                return true; //don't write if weird input
             }else{
                 buffer[buffer_Position] = letter_INPUT;
                 ++buffer_Position;
@@ -258,10 +233,8 @@ static void reinitArray(void){
 }
 
 //bits to number
-static void decode(void){
+static void decode_and_write(void){
     //Report("Array is: %s\r\n", arr);
-    //char button = '?';
-
     if (compareStrings(arr, zero) == 1){
         MAP_UtilsDelay(800000);
         Report("0\r\n");
@@ -325,16 +298,45 @@ static void decode(void){
     else{
         Message("unknown\r\n");
         button = UNKNWN;
-//        test_IR();
     }
 
     reinitArray();
+    char toWrite = "";
     MAP_UtilsDelay(800000);
-    if(button == prevButton && button != UNKNWN && numPresses < 5){
-        numPresses++;
-    } else{
+
+    switch(button){
+    case ENTER:
+        //TODO: send message
+        empty_Buffer();
+        break;
+    case DEL:
+        char_Delete();
+        break;
+    case UNKNWN:
+        //if invalid input found, want to reset
+        Timer_IF_Stop(TIMERA1_BASE, TIMER_A);
         numPresses = 0;
-        Timer_IF_Start(TIMERA1_BASE, TIMER_A, 1000);
+        Report("unknown character pressed");
+        break;
+    default:
+        if(button == prevButton){
+            //delete the char, then write the next one in the same button range ONLY if buttonpresses hasnt been reset
+            toWrite = findText();
+            if(numPresses > 0){char_Delete();}
+            toWrite = findText();
+            if(fill_Buffer(toWrite) == true){break;}
+
+            input_Display(buffer[buffer_Position-1], buffer_Position); //display next in the button range on OLED
+            numPresses++;
+            Timer_IF_Start(TIMERA1_BASE, TIMER_A, 1000); //want to start the timer after displaying first char
+        }else{
+            Timer_IF_Stop(TIMERA1_BASE, TIMER_A); //if the data is different, no need to wait for button presses
+            numPresses = 0; //reset button presses
+            toWrite = findText();
+            if(fill_Buffer(toWrite) == true){break;}
+            input_Display(buffer[buffer_Position-1], buffer_Position);
+            prevButton = button;
+        }
     }
 
     prevButton = button;
@@ -377,6 +379,12 @@ static void stringsInit(void){
     strcpy(mute,  "110001011100111110100011");
 }
 
+static void initOLED(void){
+    Adafruit_Init(); //initialize OLED
+    boot_Up(); //clear array
+    menu_Start(); //create canvas
+}
+
 static void initComms(void){
     //UART1 handler setup
     /*MAP_UARTIntRegister(UARTA1_BASE,UARTIntHandler);
@@ -404,7 +412,7 @@ static void initComms(void){
 }
 
 //Main
-int main() {
+ int main() {
     unsigned long ulStatus;
     buffer_Position = 0;
     recv_buffer_Position = 0;
@@ -426,8 +434,7 @@ int main() {
     MAP_GPIOIntClear(GPIOA0_BASE, ulStatus); //clear interrupts
 
     // clear global variables
-    bufferPos=0;
-    intHandlerFlag=0;
+    bitBufferPos=0;
     timerCount = 0;
 
     // Enable GPIO interrupt
@@ -442,13 +449,13 @@ int main() {
     initTimer(); //initialize timer interrupt
     stringsInit(); //create number to bit mapping
     reinitArray(); //empty array buffer that will be filled by IR data
-    //Adafruit_Init(); //initialize OLED
+    initOLED();
     while (1) {
-        if (bufferPos > 49) {
+        if (bitBufferPos > 49) {
             Timer_IF_Stop(TIMERA0_BASE, TIMER_A);
             MAP_GPIOIntDisable(GPIOA0_BASE, 0x40);
-            decode();
-            bufferPos = 0;
+            decode_and_write();
+            bitBufferPos = 0;
             MAP_GPIOIntEnable(GPIOA0_BASE, 0x40);
         }
     }

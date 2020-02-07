@@ -3,45 +3,45 @@
 //
 // configure the device pins for different signals
 //
-// Copyright (c) 2016, Texas Instruments Incorporated - http://www.ti.com/ 
+// Copyright (c) 2016, Texas Instruments Incorporated - http://www.ti.com/
 // All rights reserved.
-// 
-//  Redistribution and use in source and binary forms, with or without 
-//  modification, are permitted provided that the following conditions 
+//
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions
 //  are met:
 //
-//    Redistributions of source code must retain the above copyright 
+//    Redistributions of source code must retain the above copyright
 //    notice, this list of conditions and the following disclaimer.
 //
 //    Redistributions in binary form must reproduce the above copyright
-//    notice, this list of conditions and the following disclaimer in the 
-//    documentation and/or other materials provided with the   
+//    notice, this list of conditions and the following disclaimer in the
+//    documentation and/or other materials provided with the
 //    distribution.
 //
 //    Neither the name of Texas Instruments Incorporated nor the names of
 //    its contributors may be used to endorse or promote products derived
 //    from this software without specific prior written permission.
 //
-//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 
-//  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT 
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+//  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 //  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-//  A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT 
-//  OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
-//  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT 
+//  A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+//  OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+//  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
 //  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
 //  DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-//  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
-//  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
+//  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+//  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 //*****************************************************************************
 
-// This file was automatically generated on 2/5/2020 at 11:46:30 PM
-// by TI PinMux version 4.0.1543 
+// This file was automatically generated on 4/12/2016 at 4:33:38 PM
+// by TI PinMux version
 //
 //*****************************************************************************
 
-#include "pinmux.h"
+#include "pin_mux_config.h"
 #include "hw_types.h"
 #include "hw_memmap.h"
 #include "hw_gpio.h"
@@ -63,6 +63,7 @@ void PinMuxConfig(void)
     PinModeSet(PIN_04, PIN_MODE_0);
     PinModeSet(PIN_06, PIN_MODE_0);
     PinModeSet(PIN_08, PIN_MODE_0);
+    PinModeSet(PIN_15, PIN_MODE_0);
     PinModeSet(PIN_18, PIN_MODE_0);
     PinModeSet(PIN_21, PIN_MODE_0);
     PinModeSet(PIN_45, PIN_MODE_0);
@@ -71,18 +72,14 @@ void PinMuxConfig(void)
     PinModeSet(PIN_58, PIN_MODE_0);
     PinModeSet(PIN_59, PIN_MODE_0);
     PinModeSet(PIN_60, PIN_MODE_0);
-    PinModeSet(PIN_62, PIN_MODE_0);
-    PinModeSet(PIN_63, PIN_MODE_0);
-    PinModeSet(PIN_64, PIN_MODE_0);
     
     //
     // Enable Peripheral Clocks 
     //
     PRCMPeripheralClkEnable(PRCM_GPIOA0, PRCM_RUN_MODE_CLK);
-    PRCMPeripheralClkEnable(PRCM_GPIOA2, PRCM_RUN_MODE_CLK);
-    PRCMPeripheralClkEnable(PRCM_GPIOA3, PRCM_RUN_MODE_CLK);
+    PRCMPeripheralClkEnable(PRCM_GPIOA1, PRCM_RUN_MODE_CLK);
     PRCMPeripheralClkEnable(PRCM_GSPI, PRCM_RUN_MODE_CLK);
-    PRCMPeripheralClkEnable(PRCM_UARTA0, PRCM_RUN_MODE_CLK); //TODO: convert to UART1 after SPI configuration
+    PRCMPeripheralClkEnable(PRCM_UARTA0, PRCM_RUN_MODE_CLK);
 
     //
     // Configure PIN_61 for GPIO Input
@@ -91,22 +88,22 @@ void PinMuxConfig(void)
     GPIODirModeSet(GPIOA0_BASE, 0x40, GPIO_DIR_MODE_IN);
 
     //
-    // Configure PIN_15 for GPIO Output
-    // DC
-    PinTypeGPIO(PIN_15, PIN_MODE_0, false);
-    GPIODirModeSet(GPIOA2_BASE, 0x40, GPIO_DIR_MODE_OUT);
-
-    //
-    // Configure PIN_16 for GPIO Output
+    // Configure PIN_62 for GPIO Output
     // RESET
-    PinTypeGPIO(PIN_16, PIN_MODE_0, false);
-    GPIODirModeSet(GPIOA2_BASE, 0x80, GPIO_DIR_MODE_OUT);
+    PinTypeGPIO(PIN_62, PIN_MODE_0, false);
+    GPIODirModeSet(GPIOA0_BASE, 0x80, GPIO_DIR_MODE_OUT);
 
     //
-    // Configure PIN_17 for GPIO Output
+    // Configure PIN_63 for GPIO Output
     // OLEDCS
-    PinTypeGPIO(PIN_17, PIN_MODE_0, false);
-    GPIODirModeSet(GPIOA3_BASE, 0x1, GPIO_DIR_MODE_OUT);
+    PinTypeGPIO(PIN_63, PIN_MODE_0, false);
+    GPIODirModeSet(GPIOA1_BASE, 0x1, GPIO_DIR_MODE_OUT);
+
+    //
+    // Configure PIN_64 for GPIO Output
+    // DC
+    PinTypeGPIO(PIN_64, PIN_MODE_0, false);
+    GPIODirModeSet(GPIOA1_BASE, 0x2, GPIO_DIR_MODE_OUT);
 
     //
     // Configure PIN_50 for SPI0 GSPI_CS

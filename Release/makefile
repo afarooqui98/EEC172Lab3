@@ -12,8 +12,10 @@ GEN_CMDS__FLAG :=
 ORDERED_OBJS += \
 "./Adafruit_GFX.obj" \
 "./Adafruit_OLED.obj" \
+"./OLED_helpers.obj" \
+"./i2c_if.obj" \
 "./main.obj" \
-"./pinmux.obj" \
+"./pin_mux_config.obj" \
 "./startup_ccs.obj" \
 "./timer_if.obj" \
 "./uart_if.obj" \
@@ -162,8 +164,8 @@ lab3.bin: $(EXE_OUTPUTS)
 # Other Targets
 clean:
 	-$(RM) $(BIN_OUTPUTS__QUOTED)$(EXE_OUTPUTS__QUOTED)
-	-$(RM) "Adafruit_GFX.obj" "Adafruit_OLED.obj" "main.obj" "pinmux.obj" "startup_ccs.obj" "timer_if.obj" "uart_if.obj" 
-	-$(RM) "Adafruit_GFX.d" "Adafruit_OLED.d" "main.d" "pinmux.d" "startup_ccs.d" "timer_if.d" "uart_if.d" 
+	-$(RM) "Adafruit_GFX.obj" "Adafruit_OLED.obj" "OLED_helpers.obj" "i2c_if.obj" "main.obj" "pin_mux_config.obj" "startup_ccs.obj" "timer_if.obj" "uart_if.obj" 
+	-$(RM) "Adafruit_GFX.d" "Adafruit_OLED.d" "OLED_helpers.d" "i2c_if.d" "main.d" "pin_mux_config.d" "startup_ccs.d" "timer_if.d" "uart_if.d" 
 	-@echo 'Finished clean'
 	-@echo ' '
 

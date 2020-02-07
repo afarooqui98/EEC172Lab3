@@ -28,7 +28,7 @@ main.obj: C:/ti/CC3200SDK_1.5.0/cc3200-sdk/example/common/uart_if.h
 main.obj: C:/ti/CC3200SDK_1.5.0/cc3200-sdk/driverlib/uart.h
 main.obj: C:/ti/CC3200SDK_1.5.0/cc3200-sdk/example/common/timer_if.h
 main.obj: C:/ti/CC3200SDK_1.5.0/cc3200-sdk/driverlib/timer.h
-main.obj: ../pinmux.h
+main.obj: ../pin_mux_config.h
 main.obj: ../Adafruit_GFX.h
 main.obj: ../Adafruit_OLED.h
 main.obj: ../Adafruit_SSD1351.h
@@ -61,7 +61,7 @@ C:/ti/CC3200SDK_1.5.0/cc3200-sdk/example/common/uart_if.h:
 C:/ti/CC3200SDK_1.5.0/cc3200-sdk/driverlib/uart.h: 
 C:/ti/CC3200SDK_1.5.0/cc3200-sdk/example/common/timer_if.h: 
 C:/ti/CC3200SDK_1.5.0/cc3200-sdk/driverlib/timer.h: 
-../pinmux.h: 
+../pin_mux_config.h: 
 ../Adafruit_GFX.h: 
 ../Adafruit_OLED.h: 
 ../Adafruit_SSD1351.h: 

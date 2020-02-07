@@ -8,6 +8,7 @@
 <stringAttribute key="com.ti.ccstudio.debug.debugModel.ATTR_PROJECT.CC3200.ccxml.Stellaris In-Circuit Debug Interface_0/Cortex_M4_0" value="int_sw"/>
 <stringAttribute key="com.ti.ccstudio.debug.debugModel.ATTR_PROJECT.CC3200_TargetConfiguration.ccxml.Stellaris In-Circuit Debug Interface_0/Cortex_M4_0" value="int_sw"/>
 <stringAttribute key="com.ti.ccstudio.debug.debugModel.ATTR_TARGET_CONFIG" value="${target_config_active_default:int_sw}"/>
+<stringAttribute key="com.ti.ccstudio.debug.debugModel.MRU_PROGRAM.CC3200.ccxml.Stellaris In-Circuit Debug Interface_0/Cortex_M4_0" value="\\MAC/Home\Desktop\EEC172_workspace\int_sw\Release\int_sw.out"/>
 <stringAttribute key="com.ti.ccstudio.debug.debugModel.MRU_PROGRAM.CC3200_TargetConfiguration.ccxml.Stellaris In-Circuit Debug Interface_0/Cortex_M4_0" value="\\MAC/Home\Desktop\EEC172_workspace\int_sw\Release\int_sw.out"/>
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
 <listEntry value="/int_sw"/>
