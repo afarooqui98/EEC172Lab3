@@ -429,6 +429,7 @@ static void initComms(void){
 
     BoardInit();
     PinMuxConfig();
+    MAP_PRCMPeripheralClkEnable(PRCM_GSPI,PRCM_RUN_MODE_CLK);
     InitTerm();
     ClearTerm();
 
