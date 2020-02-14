@@ -40,6 +40,19 @@
 #define DEL    10
 #define ENTER  11
 #define UNKNWN 12
+
+//color macros
+#define BLACK           0x0000
+#define BLUE            0x001F
+#define GREEN           0x07E0
+#define CYAN            0x07FF
+#define RED             0xF800
+#define MAGENTA         0xF81F
+#define YELLOW          0xFFE0
+#define WHITE           0xFFFF
+#define PINK            0xF810
+#define DARKGRAY        0x8410
+#define GRAY            0xC618
 //*****************************************************************************
 //                 GLOBAL VARIABLES -- Start
 //*****************************************************************************
@@ -74,6 +87,7 @@ char mute[80];
 int button; //10 is Last, 11 is Mute, 12 is unknown
 int prevButton; //indexed similar to above
 int numPresses;
+int numColor;
 
 char numPad[10][4] = {
 {' ',' ',' ',' '}, //0 is for spaces
@@ -197,8 +211,9 @@ char findText(void){
     if(button != 1 && button != ENTER && button != DEL){
         letter[0] = numPad[button][numPresses % 4]; //modulo by 4 to cycle through the characters
     }else{
-        if(prevButton == ENTER){letter[0] = '\n';}
-        if(prevButton == DEL){letter[0] = 'd';}
+        if(button == 1){numColor++;}
+        if(button == ENTER){letter[0] = '\n';}
+        if(button == DEL){letter[0] = 'd';}
     }
 
     return letter[0];
@@ -238,6 +253,10 @@ static void write_to_screen(void){
     char toWrite = "";
     int j;
     switch(button){
+    case 1:
+        findText();
+        indicate_color(numColor % 5);
+        break;
     case ENTER:
         for (j = 0; j < buffer_Position; ++j){
             MAP_UARTCharPut(PAIRDEV, buffer[j]);
@@ -254,7 +273,7 @@ static void write_to_screen(void){
         Report("unknown character pressed");
         break;
     default:
-        if(button == prevButton && stillWaiting == 1){
+        if(button == prevButton){
             //delete the char, then write the next one in the same button range ONLY if buttonpresses hasnt been reset
             toWrite = findText();
             numPresses++;
@@ -263,7 +282,7 @@ static void write_to_screen(void){
 
             toWrite = findText();
             if(fill_Buffer(toWrite) == true){break;}
-            input_Display(buffer[buffer_Position-1], buffer_Position); //display next in the button range on OLED
+            input_Display(buffer[buffer_Position-1], buffer_Position, numColor % 5); //display next in the button range on OLED
             stillWaiting = 1;
             Report("numpresses is %d\r\n", stillWaiting);
         }else{
@@ -271,7 +290,7 @@ static void write_to_screen(void){
             numPresses = 0; //reset button presses
             toWrite = findText();
             if(fill_Buffer(toWrite) == true){break;}
-            input_Display(buffer[buffer_Position-1], buffer_Position);
+            input_Display(buffer[buffer_Position-1], buffer_Position, numColor % 5);
         }
     }
 }
@@ -429,8 +448,8 @@ static void initComms(void){
 
     BoardInit();
     PinMuxConfig();
-    MAP_PRCMPeripheralClkEnable(PRCM_GSPI,PRCM_RUN_MODE_CLK);
     InitTerm();
+    MAP_PRCMPeripheralClkEnable(PRCM_GSPI, PRCM_RUN_MODE_CLK);
     ClearTerm();
 
     //init UART and SPI
@@ -445,6 +464,7 @@ static void initComms(void){
     // clear global variables
     bitBufferPos=0;
     timerCount = 0;
+    numColor = 0;
 
     // Enable GPIO interrupt
     MAP_GPIOIntEnable(GPIOA0_BASE, 0x40);
