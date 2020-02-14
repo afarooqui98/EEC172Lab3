@@ -14,7 +14,6 @@
 #include "glcdfont.h"
 
 //I2C
-#include "i2c_if.h"
 
 
 extern int cursor_x;
@@ -34,17 +33,8 @@ float p = 3.1415926;
 #define PINK            0xF810
 #define DARKGRAY        0x8410
 #define GRAY            0xC618
-//#define
-//#define
-//#define
-//#define
-//#define
-//#define
-//#define
+int colorPad[5] = {WHITE, GREEN, BLUE, RED, CYAN};
 
-
-//*****************************************************************************
-//  function delays 3*ulCount cycles
 void delay(unsigned long ulCount){
 	int i;
 
@@ -116,11 +106,11 @@ void menu_Start(void)
     fillRect( 7, 80, 117, 46, BLACK);
 }
 
-void input_Display( char INPUT, int POSITION)
+void input_Display( char INPUT, int POSITION, int COLOR)
 {
     int x = 10 * POSITION;
     int y = 30;
-    drawChar( x, y, INPUT, WHITE, BLACK, 1 );
+    drawChar( x, y, INPUT, colorPad[COLOR], BLACK, 1 );
 }
 
 void output_Display( char OUTPUT, int POSITION)
@@ -133,6 +123,10 @@ void output_Display( char OUTPUT, int POSITION)
 void clear_Outgoing ( void )
 {
     fillRect( 7, 12, 117, 46, BLACK);
+}
+
+void indicate_color(int COLOR){
+    fillRect( 64, 64, 2, 2, colorPad[COLOR]);
 }
 
 void clear_Incoming ( void )
